@@ -1,0 +1,46 @@
+I need a POS.
+
+I heard X. Is this correct?
+
+I didn't get that one. I need a POS.
+
+I heard X, Y, ... and Z. Would you like X, Y, ... or Z?
+
+OK. I got X. I need a POS.
+
+OK. I got X. We're done.
+
+
+POSIntentHandler: POS suggestions
+YesOrNoIntentHandler: Yes or No
+ErrorHandler:  intent not understood
+
+/// ///
+Some ideas for interaction to try
+
+Use the dialog model
+Create an intent for POS with ONE slot of type AMAZON.SearchQuery to be fulfilled
+
+// First task
+begin interaction with 'Alexa, let's play mad lib'
+assume a template is chosen at random which would require x verbs, n adjectives, etc.
+send a pos intent back as the response with a 'SearchQuery' slot
+confirm the value for that slot and repeat - we can fake the validation for now
+
+So first development step is to create a pos intent successfully manage that
+as an initial step - just get things working for verb pos
+
+// states
+posselectmode  - alexa is eliciting a response to fill the pos slot
+    possible responses:
+        the pos - in this case, validate and either confirm or reject and try again
+        not understood - try again
+
+posconfirmmode - alexa is eliciting a confirmation of the pos just submitted
+    possible responses:
+        yes - update session state and elicit next slot value or output completed mad lib (if final slot)
+        no - elicit the pos again
+        not understood - try again
+
+
+
