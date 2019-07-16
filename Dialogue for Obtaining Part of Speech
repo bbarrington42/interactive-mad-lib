@@ -27,7 +27,7 @@ assume a template is chosen at random which would require x verbs, n adjectives,
 send a pos intent back as the response with a 'SearchQuery' slot
 confirm the value for that slot and repeat - we can fake the validation for now
 
-So first development step is to create a pos intent successfully manage that
+So first development step is to create a pos intent AND successfully manage that
 as an initial step - just get things working for verb pos
 
 // states

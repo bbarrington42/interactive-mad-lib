@@ -61,7 +61,7 @@ functions:
     handler: handler.madLib
     events:
       - alexaSkill:
-          appId: amzn1.ask.skill.252f780b-41db-4b80-b3f8-75ec70e734fa
+          appId: amzn1.ask.skill.81ca916f-affa-45e2-a213-029ebe407dec
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
