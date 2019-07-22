@@ -16,7 +16,7 @@ const states = {
 const NewSessionHandler = {
     'NewSession': function () {
         this.handler.state = states.STARTMODE;
-        this.emitWithState (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
+        this.emit (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
     }
 };
 
@@ -24,9 +24,7 @@ const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
         'AMAZON.YesIntent': function () {
             console.log (`YesIntent: ${JSON.stringify (this.event)}`);
-            this.handler.state = states.POSSELECTMODE;
-            const intent = this.event.request.intent;
-            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Please select a verb', intent);
+            this.emit (':ask', 'Give me a verb', 'Try selecting a verb');
         },
 
         'AMAZON.NoIntent': function () {
@@ -34,8 +32,8 @@ const startModeHandlers =
             this.emit (':tell', 'Ok, see you next time!');
         },
 
-        'NewSession': function () {
-            console.log (`NewSession: ${JSON.stringify (this.event)}`);
+        'PosSelectIntent': function () {
+            console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             this.handler.state = states.POSSELECTMODE;
             const intent = this.event.request.intent;
             // todo hard-coded to verb for now
@@ -49,7 +47,7 @@ const startModeHandlers =
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, I didn\'t quite get that';
+            const message = 'Sorry, unhandled start mode';
             this.emit (':ask', message, 'Please try again');
         }
     });
@@ -57,8 +55,8 @@ const startModeHandlers =
 const posSelectModeHandlers =
     Alexa.CreateStateHandler (states.POSSELECTMODE, {
 
-        'PosSelectIntent': function () {
-            console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
+        'ConfirmPosSlot': function () {
+            console.log (`ConfirmPosSlot: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
             console.log (`Received: ${pos}`);
             // todo Hard-code the response
@@ -69,7 +67,7 @@ const posSelectModeHandlers =
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, I didn\'t quite get that one';
+            const message = 'Sorry, unhandled piece of speech mode';
             this.emit (':tell', message);
         }
     });
