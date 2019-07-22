@@ -16,7 +16,7 @@ const states = {
 const NewSessionHandler = {
     'NewSession': function () {
         this.handler.state = states.STARTMODE;
-        this.emit (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
+        this.emitWithState (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
     }
 };
 
@@ -25,12 +25,13 @@ const startModeHandlers =
         'AMAZON.YesIntent': function () {
             console.log (`YesIntent: ${JSON.stringify (this.event)}`);
             this.handler.state = states.POSSELECTMODE;
-            this.emit (':elicitSlot', 'Please select a verb', 'Please select a verb', intent);
+            const intent = this.event.request.intent;
+            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Please select a verb', intent);
         },
 
         'AMAZON.NoIntent': function () {
             console.log (`NoIntent: ${JSON.stringify (this.event)}`);
-            this.emit(':tell', 'Ok, see you next time!');
+            this.emit (':tell', 'Ok, see you next time!');
         },
 
         'NewSession': function () {
@@ -38,7 +39,7 @@ const startModeHandlers =
             this.handler.state = states.POSSELECTMODE;
             const intent = this.event.request.intent;
             // todo hard-coded to verb for now
-            this.emit (':elicitSlot', 'Please select a verb', 'Please select a verb', intent);
+            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Please select a verb', intent);
         },
 
         'SessionEndedRequest': function () {
@@ -48,7 +49,7 @@ const startModeHandlers =
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, I didn\'t quite get that one';
+            const message = 'Sorry, I didn\'t quite get that';
             this.emit (':ask', message, 'Please try again');
         }
     });
@@ -63,7 +64,7 @@ const posSelectModeHandlers =
             // todo Hard-code the response
             this.attributes['pos'] = pos;
             this.handler.state = states.STARTMODE;
-            this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}.`);
+            this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
         },
 
         'Unhandled': function () {
