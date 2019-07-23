@@ -20,15 +20,71 @@ const NewSessionHandler = {
     }
 };
 
+/*
+ {
+ "version": "1.0",
+ "request": {
+ "type": "IntentRequest",
+ "requestId": "amzn1.echo-api.request.1",
+ "timestamp": "2019-03-21T22:32:09Z",
+ "locale": "en-US",
+ "intent": {
+ "name": "HelloWorldWithNameIntent",
+ "confirmationStatus": "NONE",
+ "slots": {
+ "firstName": {
+ "name": "firstName",
+ "value": "Emily",
+ "confirmationStatus": "NONE"
+ },
+ "favoriteColor": {
+ "name": "favoriteColor",
+ "confirmationStatus": "NONE"
+ }
+ }
+ },
+ "dialogState": "STARTED"
+ },
+ "session": {},
+ "context": {}
+ }
+ */
+
 const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
         'AMAZON.YesIntent': function () {
             console.log (`YesIntent: ${JSON.stringify (this.event)}`);
             // todo Here we would generate the template and begin by asking for the first POS to fulfill the template
             // For now, we'll just assume a verb is the first POS
+            this.handler.state = states.POSSELECTMODE;
+
+            /*
+             export interface Intent {
+             'name': string;
+             'slots'?: {
+             [key: string]: Slot;
+             };
+             'confirmationStatus': IntentConfirmationStatus;
+             }
+
+             export interface Slot {
+             'name': string;
+             'value'?: string;
+             'confirmationStatus': SlotConfirmationStatus;
+             'resolutions'?: slu.entityresolution.Resolutions;
+             }
+             */
+
+
             const updatedIntent = {
                 name: 'PosSelectIntent',
-                slots: ['pos'],
+                slots: {
+                    pos: {
+                        name: 'pos',
+                        value: 'verb',
+                        confirmationStatus: 'NONE'
+                    }
+                },
                 confirmationStatus: 'NONE'
             };
             this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Try choosing a verb', updatedIntent);
@@ -37,14 +93,6 @@ const startModeHandlers =
         'AMAZON.NoIntent': function () {
             console.log (`NoIntent: ${JSON.stringify (this.event)}`);
             this.emit (':tell', 'Ok, see you next time!');
-        },
-
-        'PosSelectIntent': function () {
-            console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
-            this.handler.state = states.POSSELECTMODE;
-            const intent = this.event.request.intent;
-            // todo hard-coded to verb for now
-            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Please select a verb', intent);
         },
 
         'SessionEndedRequest': function () {
@@ -62,15 +110,24 @@ const startModeHandlers =
 const posSelectModeHandlers =
     Alexa.CreateStateHandler (states.POSSELECTMODE, {
 
-        'ConfirmPosSlot': function () {
-            console.log (`ConfirmPosSlot: ${JSON.stringify (this.event)}`);
+        'PosSelectIntent': function () {
+            console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
             console.log (`Received: ${pos}`);
             // todo Hard-code the response
             this.attributes['pos'] = pos;
-            this.handler.state = states.STARTMODE;
             this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
         },
+
+        // 'ConfirmPosSlot': function () {
+        //     console.log (`ConfirmPosSlot: ${JSON.stringify (this.event)}`);
+        //     const pos = this.event.request.intent.slots.pos.value;
+        //     console.log (`Received: ${pos}`);
+        //     // todo Hard-code the response
+        //     this.attributes['pos'] = pos;
+        //     this.handler.state = states.STARTMODE;
+        //     this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
+        // },
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
