@@ -1,5 +1,18 @@
 'use strict';
 
+const {create, env} = require ('sanctuary');
+
+const {env: flutureEnv} = require ('fluture-sanctuary-types');
+
+const S = create ({
+    checkTypes: process.env.NODE_ENV !== 'production',
+    env: env.concat (flutureEnv)
+});
+
+const Future = require ('fluture');
+
+const {selectTemplate, nextPlaceholder, updateNextPlaceholder} = require ('./lib/session-state');
+
 const Alexa = require ('alexa-sdk');
 const APP_ID = 'amzn1.ask.skill.81ca916f-affa-45e2-a213-029ebe407dec';
 
@@ -24,9 +37,13 @@ const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
         'AMAZON.YesIntent': function () {
             console.log (`YesIntent: ${JSON.stringify (this.event)}`);
-            // todo Here we would generate the template and begin by asking for the first POS to fulfill the template
-            // For now, we'll just assume a verb is the first POS
+
+            const template = selectTemplate ();
+
+            const pos = S.maybeToNullable (nextPlaceholder (template));
+
             this.handler.state = states.POSSELECTMODE;
+            this.attributes['template'] = S.maybeToNullable (template);
 
             /*
              export interface Intent {
@@ -51,13 +68,13 @@ const startModeHandlers =
                 slots: {
                     pos: {
                         name: 'pos',
-                        value: 'verb',
+                        value: `'${pos}'`,
                         confirmationStatus: 'NONE'
                     }
                 },
                 confirmationStatus: 'NONE'
             };
-            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Try choosing a verb', updatedIntent);
+            this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
         },
 
         'AMAZON.NoIntent': function () {
@@ -84,8 +101,9 @@ const posSelectModeHandlers =
             console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
             console.log (`Received: ${pos}`);
-            // todo Hard-code the response
-            this.attributes['pos'] = pos;
+            // todo Confirm POS and either reprompt or update template and get the next POS
+            // todo If the template is filled out, :tell it to the player(s) and repeat or exit.
+            console.log (`attributes: ${JSON.stringify(this.attributes)}`);
             this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
         },
 
