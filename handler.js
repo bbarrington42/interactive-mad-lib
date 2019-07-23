@@ -20,36 +20,6 @@ const NewSessionHandler = {
     }
 };
 
-/*
- {
- "version": "1.0",
- "request": {
- "type": "IntentRequest",
- "requestId": "amzn1.echo-api.request.1",
- "timestamp": "2019-03-21T22:32:09Z",
- "locale": "en-US",
- "intent": {
- "name": "HelloWorldWithNameIntent",
- "confirmationStatus": "NONE",
- "slots": {
- "firstName": {
- "name": "firstName",
- "value": "Emily",
- "confirmationStatus": "NONE"
- },
- "favoriteColor": {
- "name": "favoriteColor",
- "confirmationStatus": "NONE"
- }
- }
- },
- "dialogState": "STARTED"
- },
- "session": {},
- "context": {}
- }
- */
-
 const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
         'AMAZON.YesIntent': function () {
