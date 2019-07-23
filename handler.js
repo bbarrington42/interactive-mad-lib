@@ -24,7 +24,14 @@ const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
         'AMAZON.YesIntent': function () {
             console.log (`YesIntent: ${JSON.stringify (this.event)}`);
-            this.emit (':ask', 'Give me a verb', 'Try selecting a verb');
+            // todo Here we would generate the template and begin by asking for the first POS to fulfill the template
+            // For now, we'll just assume a verb is the first POS
+            const updatedIntent = {
+                name: 'PosSelectIntent',
+                slots: ['pos'],
+                confirmationStatus: 'NONE'
+            };
+            this.emit (':elicitSlot', 'pos', 'Please select a verb', 'Try choosing a verb', updatedIntent);
         },
 
         'AMAZON.NoIntent': function () {
