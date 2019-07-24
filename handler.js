@@ -34,8 +34,8 @@ function elicitPosSlot() {
 
     const maybePos = nextPlaceholder (template);
     if (S.isNothing (maybePos)) {
-        // todo Just blurt out the completed template for now. Eventually, prompt and ask to play again (?)
-        this.emit (':tell', `Your completed mad-lib is: ${template}`);
+        this.handler.state = states.STARTMODE;
+        this.emit (':ask', `Your completed mad-lib is: ${template}. Would you like to play again?`, 'Please answer Yes or No');
     } else {
 
         const pos = S.maybeToNullable (maybePos);
@@ -112,9 +112,13 @@ const posSelectModeHandlers =
             // todo Validate that 'intendedPos' is indeed the required POS. If not, re-solicit
             // For now, just assume the value is the intended POS. Ask for a confirmation.
             this.handler.state = states.POSCONFIRMMODE;
-
-
+            
             this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
+        },
+
+        'SessionEndedRequest': function () {
+            console.log ('Session ended');
+            this.emit (':tell', 'Your session has ended');
         },
 
         'Unhandled': function () {
@@ -143,6 +147,12 @@ const posConfirmModeHandlers =
 
             // Try again
             elicitPosSlot.bind (this) ();
+        },
+
+        'Unhandled': function () {
+            console.error (`Unhandled: ${this.handler.state}`);
+            const message = 'Sorry, unhandled confirmation';
+            this.emit (':tell', message);
         }
     });
 
