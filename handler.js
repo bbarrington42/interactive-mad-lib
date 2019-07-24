@@ -9,9 +9,10 @@ const S = create ({
     env: env.concat (flutureEnv)
 });
 
-const Future = require ('fluture');
 
 const {selectTemplate, nextPlaceholder, updateNextPlaceholder} = require ('./lib/session-state');
+
+const {isPOS} = require ('./lib/tagger');
 
 const Alexa = require ('alexa-sdk');
 const APP_ID = 'amzn1.ask.skill.81ca916f-affa-45e2-a213-029ebe407dec';
@@ -109,11 +110,14 @@ const posSelectModeHandlers =
             console.log (`Received: ${pos}`);
             console.log (`attributes: ${JSON.stringify (this.attributes)}`);
 
-            // todo Validate that 'intendedPos' is indeed the required POS. If not, re-solicit
-            // For now, just assume the value is the intended POS. Ask for a confirmation.
-            this.handler.state = states.POSCONFIRMMODE;
-            
-            this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
+            if(!isPOS(intendedPos)(pos)) {
+                // todo Need to add custom messaging
+                elicitPosSlot.bind (this) ();
+            } else {
+                this.handler.state = states.POSCONFIRMMODE;
+
+                this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
+            }
         },
 
         'SessionEndedRequest': function () {
