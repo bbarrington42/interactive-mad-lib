@@ -26,30 +26,37 @@ const states = {
 
 // Helpers
 // NOTE: This CANNOT be declared using fat arrow notation as it would not be possible to bind the 'this' pointer
+// todo Add custom messaging
+// todo Try to use 'Alexa' as 'this' so this does not require being called after 'bind'
 function elicitPosSlot() {
     this.handler.state = states.POSSELECTMODE;
     const template = this.attributes.template;
 
-    // Default to noun for lack of anything better
-    // todo If 'nextPlaceholder' returns Nothing, then we should prompt to have the filled out template read back here!
-    const pos = S.fromMaybe ('noun') (nextPlaceholder (template));
+    const maybePos = nextPlaceholder (template);
+    if (S.isNothing (maybePos)) {
+        // todo Just blurt out the completed template for now. Eventually, prompt and ask to play again (?)
+        this.emit (':tell', `Your completed mad-lib is: ${template}`);
+    } else {
 
-    // Save the intended POS
-    this.attributes['pos'] = pos;
+        const pos = S.maybeToNullable (maybePos);
 
-    const updatedIntent = {
-        name: 'PosSelectIntent',
-        slots: {
-            pos: {
-                name: 'pos',
-                value: `'${pos}'`,
-                confirmationStatus: 'NONE'
-            }
-        },
-        confirmationStatus: 'NONE'
-    };
+        // Save the intended POS
+        this.attributes['pos'] = pos;
 
-    this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
+        const updatedIntent = {
+            name: 'PosSelectIntent',
+            slots: {
+                pos: {
+                    name: 'pos',
+                    value: `'${pos}'`,
+                    confirmationStatus: 'NONE'
+                }
+            },
+            confirmationStatus: 'NONE'
+        };
+
+        this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
+    }
 }
 
 
@@ -101,25 +108,14 @@ const posSelectModeHandlers =
             this.attributes['selectedPos'] = pos;
             console.log (`Received: ${pos}`);
             console.log (`attributes: ${JSON.stringify (this.attributes)}`);
-            // todo Confirm POS and either reprompt or update template and get the next POS
-            // todo If the template is filled out, :tell it to the player(s) and repeat or exit.
 
-            // For now, assume the value is the intended POS. Just ask for a confirmation.
+            // todo Validate that 'intendedPos' is indeed the required POS. If not, re-solicit
+            // For now, just assume the value is the intended POS. Ask for a confirmation.
             this.handler.state = states.POSCONFIRMMODE;
 
 
             this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
         },
-
-        // 'ConfirmPosSlot': function () {
-        //     console.log (`ConfirmPosSlot: ${JSON.stringify (this.event)}`);
-        //     const pos = this.event.request.intent.slots.pos.value;
-        //     console.log (`Received: ${pos}`);
-        //     // todo Hard-code the response
-        //     this.attributes['pos'] = pos;
-        //     this.handler.state = states.STARTMODE;
-        //     this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
-        // },
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
