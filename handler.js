@@ -26,11 +26,16 @@ const states = {
 
 // Helpers
 // NOTE: This CANNOT be declared using fat arrow notation as it would not be possible to bind the 'this' pointer
-function elicitPosSlot(template) {
+function elicitPosSlot() {
+    this.handler.state = states.POSSELECTMODE;
+    const template = this.attributes.template;
 
     // Default to noun for lack of anything better
+    // todo If 'nextPlaceholder' returns Nothing, then we should prompt to have the filled out template read back here!
     const pos = S.fromMaybe ('noun') (nextPlaceholder (template));
 
+    // Save the intended POS
+    this.attributes['pos'] = pos;
 
     const updatedIntent = {
         name: 'PosSelectIntent',
@@ -64,10 +69,9 @@ const startModeHandlers =
 
             const template = selectTemplate ();
 
-            this.handler.state = states.POSSELECTMODE;
             this.attributes['template'] = template;
 
-            elicitPosSlot.bind (this) (template);
+            elicitPosSlot.bind (this) ();
         },
 
         'AMAZON.NoIntent': function () {
@@ -93,11 +97,18 @@ const posSelectModeHandlers =
         'PosSelectIntent': function () {
             console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
+            const intendedPos = this.attributes.pos;
+            this.attributes['selectedPos'] = pos;
             console.log (`Received: ${pos}`);
+            console.log (`attributes: ${JSON.stringify (this.attributes)}`);
             // todo Confirm POS and either reprompt or update template and get the next POS
             // todo If the template is filled out, :tell it to the player(s) and repeat or exit.
-            console.log (`attributes: ${JSON.stringify (this.attributes)}`);
-            this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
+
+            // For now, assume the value is the intended POS. Just ask for a confirmation.
+            this.handler.state = states.POSCONFIRMMODE;
+
+
+            this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
         },
 
         // 'ConfirmPosSlot': function () {
@@ -118,6 +129,27 @@ const posSelectModeHandlers =
 
     });
 
+const posConfirmModeHandlers =
+    Alexa.CreateStateHandler (states.POSCONFIRMMODE, {
+        'AMAZON.YesIntent': function () {
+            console.log (`${JSON.stringify (this.event)}`);
+            // Update the template with the selected POS
+            const pos = this.attributes.selectedPos;
+            const template = this.attributes.template;
+            this.attributes.template = updateNextPlaceholder (template) (pos);
+
+            // Go for the next POS
+            elicitPosSlot.bind (this) ();
+        },
+
+        'AMAZON.NoIntent': function () {
+            console.log (`${JSON.stringify (this.event)}`);
+
+            // Try again
+            elicitPosSlot.bind (this) ();
+        }
+    });
+
 
 exports.madLib = function (event, context) {
     console.log (`REQUEST++++${JSON.stringify (event)}`);
@@ -126,7 +158,7 @@ exports.madLib = function (event, context) {
 
     alexa.appId = APP_ID;
 
-    alexa.registerHandlers (NewSessionHandler, startModeHandlers, posSelectModeHandlers);
+    alexa.registerHandlers (NewSessionHandler, startModeHandlers, posSelectModeHandlers, posConfirmModeHandlers);
 
     alexa.execute ();
 
