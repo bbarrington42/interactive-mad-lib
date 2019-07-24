@@ -24,6 +24,30 @@ const states = {
     POSCONFIRMMODE: '_POSCONFIRMMODE'
 };
 
+// Helpers
+// NOTE: This CANNOT be declared using fat arrow notation as it would not be possible to bind the 'this' pointer
+function elicitPosSlot(template) {
+
+    // Default to noun for lack of anything better
+    const pos = S.fromMaybe ('noun') (nextPlaceholder (template));
+
+
+    const updatedIntent = {
+        name: 'PosSelectIntent',
+        slots: {
+            pos: {
+                name: 'pos',
+                value: `'${pos}'`,
+                confirmationStatus: 'NONE'
+            }
+        },
+        confirmationStatus: 'NONE'
+    };
+
+    this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
+}
+
+
 /* INTENT HANDLERS */
 
 const NewSessionHandler = {
@@ -40,41 +64,10 @@ const startModeHandlers =
 
             const template = selectTemplate ();
 
-            const pos = S.maybeToNullable (nextPlaceholder (template));
-
             this.handler.state = states.POSSELECTMODE;
-            this.attributes['template'] = S.maybeToNullable (template);
+            this.attributes['template'] = template;
 
-            /*
-             export interface Intent {
-             'name': string;
-             'slots'?: {
-             [key: string]: Slot;
-             };
-             'confirmationStatus': IntentConfirmationStatus;
-             }
-
-             export interface Slot {
-             'name': string;
-             'value'?: string;
-             'confirmationStatus': SlotConfirmationStatus;
-             'resolutions'?: slu.entityresolution.Resolutions;
-             }
-             */
-
-
-            const updatedIntent = {
-                name: 'PosSelectIntent',
-                slots: {
-                    pos: {
-                        name: 'pos',
-                        value: `'${pos}'`,
-                        confirmationStatus: 'NONE'
-                    }
-                },
-                confirmationStatus: 'NONE'
-            };
-            this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
+            elicitPosSlot.bind (this) (template);
         },
 
         'AMAZON.NoIntent': function () {
@@ -103,7 +96,7 @@ const posSelectModeHandlers =
             console.log (`Received: ${pos}`);
             // todo Confirm POS and either reprompt or update template and get the next POS
             // todo If the template is filled out, :tell it to the player(s) and repeat or exit.
-            console.log (`attributes: ${JSON.stringify(this.attributes)}`);
+            console.log (`attributes: ${JSON.stringify (this.attributes)}`);
             this.emit (':tell', `OK, Thanks, I understood your selection is ${pos}`);
         },
 
@@ -122,6 +115,7 @@ const posSelectModeHandlers =
             const message = 'Sorry, unhandled piece of speech mode';
             this.emit (':tell', message);
         }
+
     });
 
 
