@@ -27,8 +27,7 @@ const states = {
 
 // Helpers
 // NOTE: This CANNOT be declared using fat arrow notation as it would not be possible to bind the 'this' pointer
-// todo Add custom messaging
-// todo Try to use 'Alexa' as 'this' so this does not require being called after 'bind'
+// This MUST be bound in order to work properly.
 function elicitPosSlot() {
     this.handler.state = states.POSSELECTMODE;
     const template = this.attributes.template;
@@ -56,7 +55,9 @@ function elicitPosSlot() {
             confirmationStatus: 'NONE'
         };
 
-        this.emit (':elicitSlot', 'pos', `Please select a ${pos}`, `Try choosing a ${pos}`, updatedIntent);
+        const prep = pos.startsWith('a') ? 'an' : 'a';
+
+        this.emit (':elicitSlot', 'pos', `Please select ${prep} ${pos}`, `Try choosing ${prep} ${pos}`, updatedIntent);
     }
 }
 
@@ -94,7 +95,7 @@ const startModeHandlers =
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, unhandled start mode';
+            const message = 'Sorry, I don\'t know what to do now';
             this.emit (':ask', message, 'Please try again');
         }
     });
@@ -117,7 +118,7 @@ const posSelectModeHandlers =
             } else {
                 this.handler.state = states.POSCONFIRMMODE;
 
-                this.emit (':ask', `OK, I understood your selection is ${pos}. Is this correct?`, `Is ${pos} correct?`);
+                this.emit (':ask', `You selected ${pos}. Is this correct?`, `Is ${pos} correct?`);
             }
         },
 
@@ -128,7 +129,7 @@ const posSelectModeHandlers =
 
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, unhandled piece of speech mode';
+            const message = 'Sorry, I don\'t know what to do now';
             this.emit (':tell', message);
         }
 
@@ -154,9 +155,14 @@ const posConfirmModeHandlers =
             elicitPosSlot.bind (this) ();
         },
 
+        'SessionEndedRequest': function () {
+            console.log ('Session ended');
+            this.emit (':tell', 'Your session has ended');
+        },
+
         'Unhandled': function () {
             console.error (`Unhandled: ${this.handler.state}`);
-            const message = 'Sorry, unhandled confirmation';
+            const message = 'Sorry, I don\'t know what to do now';
             this.emit (':tell', message);
         }
     });
