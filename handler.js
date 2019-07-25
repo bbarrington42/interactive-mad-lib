@@ -36,7 +36,7 @@ function elicitPosSlot() {
     const maybePos = nextPlaceholder (template);
     if (S.isNothing (maybePos)) {
         this.handler.state = states.STARTMODE;
-        this.emit (':ask', `Your completed mad-lib is: ${template}. Would you like to play again?`, 'Please answer Yes or No');
+        this.emit (':ask', `Your completed mad-lib is: ${template}. Would you like to play again?`, 'Please answer yes or no');
     } else {
 
         const pos = S.maybeToNullable (maybePos);
@@ -56,7 +56,7 @@ function elicitPosSlot() {
             confirmationStatus: 'NONE'
         };
 
-        this.emit (':elicitSlot', 'pos', `'Please select a ${pos}'`, `'Try choosing a ${pos}'`, updatedIntent);
+        this.emit (':elicitSlot', 'pos', `Please select a ${pos}`, `Try choosing a ${pos}`, updatedIntent);
     }
 }
 
@@ -110,9 +110,10 @@ const posSelectModeHandlers =
             console.log (`Received: ${pos}`);
             console.log (`attributes: ${JSON.stringify (this.attributes)}`);
 
-            if(!isPOS(intendedPos)(pos)) {
-                // todo Need to add custom messaging
-                elicitPosSlot.bind (this) ();
+            if (!isPOS (intendedPos) (pos)) {
+                this.emit (':elicitSlot', 'pos',
+                    `${pos} does not appear to be a ${intendedPos}. Please select another ${intendedPos}`,
+                    `Please select a ${intendedPos}`, this.event.request.intent);
             } else {
                 this.handler.state = states.POSCONFIRMMODE;
 
