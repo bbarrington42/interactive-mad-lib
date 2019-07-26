@@ -64,7 +64,7 @@ function elicitPosSlot() {
 
 /* INTENT HANDLERS */
 
-const NewSessionHandler = {
+const newSessionHandler = {
     'NewSession': function () {
         this.handler.state = states.STARTMODE;
         this.emit (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
@@ -175,7 +175,7 @@ exports.madLib = function (event, context) {
 
     alexa.appId = APP_ID;
 
-    alexa.registerHandlers (NewSessionHandler, startModeHandlers, posSelectModeHandlers, posConfirmModeHandlers);
+    alexa.registerHandlers (newSessionHandler, startModeHandlers, posSelectModeHandlers, posConfirmModeHandlers);
 
     alexa.execute ();
 
