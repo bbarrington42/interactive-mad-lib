@@ -42,22 +42,23 @@ function elicitPosSlot() {
 
         // Save the intended POS
         this.attributes['pos'] = pos;
+        const text = pos.text;
 
         const updatedIntent = {
             name: 'PosSelectIntent',
             slots: {
                 pos: {
                     name: 'pos',
-                    value: `'${pos}'`,
+                    value: `'${text}'`,
                     confirmationStatus: 'NONE'
                 }
             },
             confirmationStatus: 'NONE'
         };
 
-        const prep = pos.startsWith('a') ? 'an' : 'a';
+        const prep = text.startsWith('a') ? 'an' : 'a';
 
-        this.emit (':elicitSlot', 'pos', `Please select ${prep} ${pos}`, `Try choosing ${prep} ${pos}`, updatedIntent);
+        this.emit (':elicitSlot', 'pos', `Please select ${prep} ${text}`, `Try choosing ${prep} ${text}`, updatedIntent);
     }
 }
 
@@ -106,18 +107,20 @@ const posSelectModeHandlers =
         'PosSelectIntent': function () {
             console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
-            // todo 'pos' will contain an object (text & lexer code)
+
             const intendedPos = this.attributes.pos;
-            this.attributes['selectedPos'] = pos;
+            // 'intendedPos' contains an object ({text, codes})
             console.log (`Received: ${pos}`);
             console.log (`attributes: ${JSON.stringify (this.attributes)}`);
 
-            if (!isPOS (intendedPos) (pos)) {
+            const text = intendedPos.text;
+            if (!isPOS (intendedPos.codes) (pos)) {
                 this.emit (':elicitSlot', 'pos',
-                    `${pos} does not appear to be a ${intendedPos}. Please select another ${intendedPos}`,
-                    `Please select a ${intendedPos}`, this.event.request.intent);
+                    `${pos} does not appear to be a ${text}. Please select another ${text}`,
+                    `Please select a ${text}`, this.event.request.intent);
             } else {
                 this.handler.state = states.POSCONFIRMMODE;
+                this.attributes.selectedPos = pos;
 
                 this.emit (':ask', `You selected ${pos}. Is this correct?`, `Is ${pos} correct?`);
             }
