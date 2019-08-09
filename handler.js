@@ -106,6 +106,7 @@ const posSelectModeHandlers =
         'PosSelectIntent': function () {
             console.log (`PosSelectIntent: ${JSON.stringify (this.event)}`);
             const pos = this.event.request.intent.slots.pos.value;
+            // todo 'pos' will contain an object (text & lexer code)
             const intendedPos = this.attributes.pos;
             this.attributes['selectedPos'] = pos;
             console.log (`Received: ${pos}`);
