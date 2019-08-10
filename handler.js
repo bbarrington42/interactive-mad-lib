@@ -150,7 +150,7 @@ const posSelectModeHandlers =
                 this.handler.state = states.POSCONFIRMMODE;
                 this.attributes.selectedPos = pos;
 
-                this.emit (':ask', `${pos}. OK?`, `Is ${pos} correct?`);
+                this.emit (':ask', `${pos}. Is that right?`, `Is ${pos} correct?`);
             }
         },
 
