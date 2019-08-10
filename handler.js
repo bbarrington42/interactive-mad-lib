@@ -22,7 +22,8 @@ const APP_ID = 'amzn1.ask.skill.81ca916f-affa-45e2-a213-029ebe407dec';
 const states = {
     STARTMODE: '_STARTMODE',
     POSSELECTMODE: '_POSSELECTMODE',
-    POSCONFIRMMODE: '_POSCONFIRMMODE'
+    POSCONFIRMMODE: '_POSCONFIRMMODE',
+    TEMPLATEREPEATMODE: '_TEMPLATEREPEATMODE',
 };
 
 // Helpers
@@ -34,8 +35,8 @@ function elicitPosSlot() {
 
     const maybePos = nextPlaceholder (template);
     if (S.isNothing (maybePos)) {
-        this.handler.state = states.STARTMODE;
-        this.emit (':ask', `Your completed mad-lib is: ${template}. Would you like to play again?`, 'Please answer yes or no');
+        this.handler.state = states.TEMPLATEREPEATMODE;
+        this.emit (':ask', `Your completed mad-lib is: ${template}. Would you like to hear it again?`, 'Please answer yes or no');
     } else {
 
         const pos = S.maybeToNullable (maybePos);
@@ -71,6 +72,33 @@ const newSessionHandler = {
         this.emit (':ask', 'Welcome to the interactive mad lib generator. Would you like to play?');
     }
 };
+
+const repeatModeHandler =
+    Alexa.CreateStateHandler (states.TEMPLATEREPEATMODE, {
+        'AMAZON.YesIntent': function () {
+            console.log (`YesIntent: ${JSON.stringify (this.event)}`);
+
+            const template = this.attributes.template;
+            this.emit (':ask', `${template}. Would you like to hear it again?`, 'Please answer yes or no');
+        },
+
+        'AMAZON.NoIntent': function () {
+            console.log (`NoIntent: ${JSON.stringify (this.event)}`);
+            this.handler.state = states.STARTMODE;
+            this.emit (':ask', `Would you like to play again?`, 'Please answer yes or no');
+        },
+
+        'SessionEndedRequest': function () {
+            console.log ('Session ended');
+            this.emit (':tell', 'Your session has ended');
+        },
+
+        'Unhandled': function () {
+            console.error (`Unhandled: ${this.handler.state}`);
+            const message = 'Sorry, I don\'t know what to do now';
+            this.emit (':ask', message, 'Please try again');
+        }
+    });
 
 const startModeHandlers =
     Alexa.CreateStateHandler (states.STARTMODE, {
@@ -122,7 +150,7 @@ const posSelectModeHandlers =
                 this.handler.state = states.POSCONFIRMMODE;
                 this.attributes.selectedPos = pos;
 
-                this.emit (':ask', `You selected ${pos}. Is this correct?`, `Is ${pos} correct?`);
+                this.emit (':ask', `${pos}. OK?`, `Is ${pos} correct?`);
             }
         },
 
@@ -179,7 +207,8 @@ exports.madLib = function (event, context) {
 
     alexa.appId = APP_ID;
 
-    alexa.registerHandlers (newSessionHandler, startModeHandlers, posSelectModeHandlers, posConfirmModeHandlers);
+    alexa.registerHandlers (newSessionHandler, startModeHandlers,
+        posSelectModeHandlers, posConfirmModeHandlers, repeatModeHandler);
 
     alexa.execute ();
 
